@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>12.1 - 翻阅</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#111;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;font-family:-apple-system,sans-serif;user-select:none}
+
+.book{position:relative;width:800px;height:560px;perspective:2500px}
+
+/* Pages */
+.p{position:absolute;top:0;width:400px;height:560px;background:#fff;overflow:hidden}
+.p img{position:absolute;width:800px;height:560px;object-fit:contain}
+.pl{left:0;border-radius:8px 0 0 8px;box-shadow:2px 0 8px rgba(0,0,0,.3);z-index:2}
+.pr{left:400px;border-radius:0 8px 8px 0;box-shadow:-2px 0 8px rgba(0,0,0,.3);z-index:2}
+.pl img{left:0}.pr img{left:-400px}
+
+/* Hide right when flipping */
+.book.flipping .pr{visibility:hidden}
+
+/* Next pages */
+.nx{position:absolute;top:0;width:400px;height:560px;background:#fff;overflow:hidden;z-index:1}
+.nx img{position:absolute;width:800px;height:560px;object-fit:contain}
+.nxl{left:0;border-radius:8px 0 0 8px}.nxr{left:400px;border-radius:0 8px 8px 0}
+.nxl img{left:0}.nxr img{left:-400px}
+
+/* Flip */
+.fl{position:absolute;top:0;width:400px;height:560px;transform-style:preserve-3d;z-index:10;pointer-events:none}
+.fl.fwd{left:400px;transform-origin:left center}
+.fl.bwd{left:0;transform-origin:right center}
+.ff,.fb{position:absolute;top:0;left:0;width:400px;height:560px;backface-visibility:hidden;overflow:hidden;background:#fff}
+.ff img,.fb img{position:absolute;width:800px;height:560px;object-fit:contain}
+.fb{transform:rotateY(180deg)}
+
+.bar{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);display:flex;gap:16px;align-items:center;background:rgba(255,255,255,.95);padding:10px 24px;border-radius:30px;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+.bar button{width:40px;height:40px;border:none;background:#eee;border-radius:50%;cursor:pointer;font-size:1.1rem}
+.bar button:hover{background:#ddd}
+#info{font-size:.9rem;min-width:60px;text-align:center}
+.hint{position:fixed;top:30px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.5);font-size:.85rem}
+</style>
+</head>
+<body>
+
+<div class="hint" id="hint">← 拖动翻页 →</div>
+
+<div class="book" id="book">
+  <div class="nx nxl" id="nl"><img></div>
+  <div class="nx nxr" id="nr"><img></div>
+  <div class="p pl" id="pl"><img></div>
+  <div class="p pr" id="pr"><img></div>
+</div>
+
+<div class="bar">
+  <button id="prevB">←</button>
+  <span id="info">1/28</span>
+  <button id="nextB">→</button>
+</div>
+
+<script>
+var T=28,C=1,drag=false,side=null,sx=0,ang=0,fel=null,busy=false;
+var book=document.getElementById('book');
+var pl=document.getElementById('pl'),pr=document.getElementById('pr');
+var nl=document.getElementById('nl'),nr=document.getElementById('nr');
+
+function S(n){return'book-pages/page-'+(n<10?'0':'')+n+'.jpg'}
+
+function I(n,l){var i=document.createElement('img');i.src=S(n);i.style.left=l;return i}
+
+function show(){
+  pl.innerHTML='';pl.appendChild(I(C,'0'));
+  pr.innerHTML='';pr.appendChild(I(C,'-400px'));
+  document.getElementById('info').textContent=C+'/'+T;
+}
+
+function setNx(n){
+  if(n<1||n>T){nl.style.display='none';nr.style.display='none';return}
+  nl.querySelector('img').src=S(n);
+  nr.querySelector('img').src=S(n);
+  nl.style.display='';nr.style.display='';
+}
+
+function mkFl(d){
+  var e=document.createElement('div');
+  e.className='fl '+(d==='right'?'fwd':'bwd');
+  var f=document.createElement('div');f.className='ff';
+  var b=document.createElement('div');b.className='fb';
+  if(d==='right'){f.appendChild(I(C,'-400px'));b.appendChild(I(C+1,'0'))}
+  else{f.appendChild(I(C,'0'));b.appendChild(I(C-1,'-400px'))}
+  e.appendChild(f);e.appendChild(b);
+  return e;
+}
+
+function go(x,d){
+  if(busy)return;
+  if(d==='right'&&C>=T)return;
+  if(d==='left'&&C<=1)return;
+  busy=true;drag=true;side=d;sx=x;
+  fel=mkFl(d);
+  book.appendChild(fel);
+  book.classList.add('flipping');
+  setNx(d==='right'?C+1:C-1);
+  document.getElementById('hint').style.opacity='0';
+}
+
+function mv(x){
+  if(!drag||!fel)return;
+  var a=(x-sx);
+  if(side==='right')ang=Math.max(-180,Math.min(0,a));
+  else ang=Math.max(0,Math.min(180,a));
+  fel.style.transform='rotateY('+ang+'deg)';
+}
+
+function up(){
+  if(!drag)return;
+  drag=false;
+  var fwd=side==='right'&&ang<-90;
+  var bwd=side==='left'&&ang>90;
+  
+  fel.style.transition='transform .45s ease-out';
+  if(fwd)fel.style.transform='rotateY(-180deg)';
+  else if(bwd)fel.style.transform='rotateY(180deg)';
+  else fel.style.transform='rotateY(0deg)';
+  
+  var f=fel,fn=fwd,bn=bwd;
+  setTimeout(function(){
+    f.remove();
+    if(fn)C++;else if(bn)C--;
+    book.classList.remove('flipping');
+    show();
+    nl.style.display='none';nr.style.display='none';
+    fel=null;ang=0;side=null;busy=false;
+  },460);
+}
+
+book.onmousedown=function(e){
+  var r=book.getBoundingClientRect();
+  go(e.clientX,e.clientX>r.left+400?'right':'left');
+  e.preventDefault();
+};
+window.onmousemove=function(e){mv(e.clientX)};
+window.onmouseup=up;
+
+book.ontouchstart=function(e){
+  var r=book.getBoundingClientRect(),x=e.touches[0].clientX;
+  go(x,x>r.left+400?'right':'left');
+};
+window.ontouchmove=function(e){if(drag){mv(e.touches[0].clientX);e.preventDefault()}};
+window.ontouchend=up;
+
+document.getElementById('prevB').onclick=function(){if(C>1&&!busy){C--;show()}};
+document.getElementById('nextB').onclick=function(){if(C<T&&!busy){C++;show()}};
+document.onkeydown=function(e){
+  if(busy)return;
+  if(e.key==='ArrowLeft'&&C>1){C--;show()}
+  if((e.key==='ArrowRight'||e.key===' ')&&C<T){C++;show();e.preventDefault()}
+};
+
+show();
+setTimeout(function(){document.getElementById('hint').style.opacity='0'},4000);
+</script>
+</body>
+</html>

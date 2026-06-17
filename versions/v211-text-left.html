@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>周烨琛</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@200;300;400;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  background: #fff; font-family: 'Noto Serif SC', -apple-system, serif;
+  -webkit-font-smoothing: antialiased; overflow-x: hidden;
+}
+.dawn { position: fixed; inset: 0; background: #000; z-index: 100; animation: dawnFade 1.6s ease-out forwards; pointer-events: none; }
+@keyframes dawnFade { 0% { opacity: 1; } 100% { opacity: 0; } }
+
+/* NAV */
+.nav-wrapper {
+  position: fixed; left: calc(-37vw + 20px); top: 50%; margin-top: -26vw;
+  width: 50vw; height: 52vw; z-index: 50;
+  cursor: grab; opacity: 0; pointer-events: none; transition: opacity 0.5s;
+}
+.nav-wrapper.visible { opacity: 1; pointer-events: auto; }
+.nav-wrapper:active { cursor: grabbing; }
+.nav-dial {
+  position: absolute; left: calc(-35vw + 20px); top: 0;
+  width: 52vw; height: 52vw; border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.3) 100%);
+  backdrop-filter: blur(40px) saturate(180%) brightness(1.1);
+  -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(1.1);
+  border: 1px solid rgba(255,255,255,0.25);
+  box-shadow:
+    0 8px 32px rgba(0,0,0,0.08),
+    inset 0 4px 0 rgba(255,255,255,0.6),
+    inset 0 -4px 0 rgba(0,0,0,0.06),
+    inset 4px 0 0 rgba(255,255,255,0.35),
+    inset -4px 0 0 rgba(255,255,255,0.35),
+    inset 0 0 60px rgba(255,255,255,0.15),
+    inset 0 0 120px rgba(255,255,255,0.08);
+  transition: left 2.5s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 2.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.nav-dial::before {
+  content: '';
+  position: absolute; inset: 0; border-radius: 50%;
+  background: radial-gradient(circle at 25% 25%, rgba(255,255,255,0.4) 0%, transparent 50%),
+              radial-gradient(circle at 75% 75%, rgba(255,255,255,0.15) 0%, transparent 40%);
+  pointer-events: none;
+}
+.nav-dial::after {
+  content: '';
+  position: absolute; inset: -2px; border-radius: 50%;
+  background: radial-gradient(circle, transparent 60%, rgba(255,255,255,0.2) 80%, transparent 100%);
+  pointer-events: none;
+}
+.nav-wrapper:hover .nav-dial {
+  left: -9vw;
+  transition: left 1.2s cubic-bezier(0.34, 1.2, 0.64, 1), box-shadow 1.2s cubic-bezier(0.34, 1.2, 0.64, 1);
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.12),
+    0 8px 20px rgba(0,0,0,0.08),
+    inset 0 4px 0 rgba(255,255,255,0.7),
+    inset 0 -4px 0 rgba(0,0,0,0.08),
+    inset 4px 0 0 rgba(255,255,255,0.45),
+    inset -4px 0 0 rgba(255,255,255,0.45),
+    inset 0 0 80px rgba(255,255,255,0.2),
+    inset 0 0 160px rgba(255,255,255,0.1);
+}
+/* 刻度 */
+.nav-mark {
+  position: absolute; left: 50%; top: 50%;
+  font-size: 1.4rem; font-weight: 500; color: #aaa; letter-spacing: 0.12em;
+  white-space: nowrap; transition: color 0.3s;
+}
+.nav-mark.active { color: #1d1d1f; font-weight: 500; }
+.nav-mark:nth-child(1) { transform: rotate(0deg) translateX(20vw) translateY(-50%); text-align: right; margin-right: -80px; }
+.nav-mark:nth-child(2) { transform: rotate(48deg) translateX(20vw) translateY(-50%); text-align: right; margin-right: -80px; font-size: 1.8rem; font-weight: 600; }
+.nav-mark:nth-child(3) { transform: rotate(96deg) translateX(22vw) translateY(-50%); text-align: right; margin-right: -80px; font-size: 1.375rem; }
+.nav-mark:nth-child(4) { transform: rotate(192deg) translateX(27vw) translateY(-50%); text-align: right; margin-right: -80px; font-size: 1.2rem; }
+.nav-mark:nth-child(5) { transform: rotate(240deg) translateX(26vw) translateY(-50%); text-align: right; margin-right: -80px; }
+
+/* HERO */
+.hero { position: relative; height: 100vh; overflow: hidden; background: #fff; }
+.hero-img {
+  width: 100%; height: 100%; object-fit: cover; filter: brightness(0.95);
+  opacity: 0; animation: imgFade 1.6s ease-out 0.2s forwards;
+  -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+}
+@keyframes imgFade { 0% { opacity: 0; } 100% { opacity: 1; } }
+.hero-content {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  justify-content: center; align-items: center; z-index: 3; padding: 2rem;
+}
+.hero-content h1 {
+  font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 300; letter-spacing: 0.04em;
+  text-align: center; line-height: 1.3; color: #fff; opacity: 0;
+  animation: textFade 4s ease-out 1.5s forwards; text-shadow: 0 1px 20px rgba(0,0,0,0.3);
+}
+.hero-content .sub {
+  margin-top: 1.2rem; font-size: clamp(0.95rem, 2.2vw, 1.4rem); font-weight: 200;
+  color: #fff; text-align: center; letter-spacing: 0.02em; opacity: 0;
+  animation: textFade 4s ease-out 2.5s forwards; text-shadow: 0 1px 12px rgba(0,0,0,0.3);
+}
+@keyframes textFade { 0% { opacity: 0; transform: translateY(6px); } 100% { opacity: 1; transform: translateY(0); } }
+
+/* PAGES */
+.page { min-height: 100vh; background: #fff; display: flex; align-items: center; justify-content: center; }
+.page-inner { padding: 4rem; max-width: 600px; }
+
+.page .page-inner {
+  position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  padding: 4rem; max-width: 45vw;
+}
+
+.page-inner h2 { font-size: 1.8rem; font-weight: 300; margin-bottom: 1.5rem; color: #1d1d1f; }
+.page-inner p { font-size: 0.85rem; line-height: 2; color: #86868b; }
+
+/* BLUR EFFECTS */
+body.dial-hover .hero, body.dial-hover .page { filter: blur(4px); transition: filter 0.4s ease; }
+
+/* CONTACT PAGE */
+.page-contact {
+  position: relative; background-image: url('contact-bg.jpg');
+  background-size: cover; background-position: center;
+}
+.page-contact .contact-content {
+  position: absolute; top: calc(2rem + 110px); left: calc(2rem + 30px);
+  z-index: 2; transition: filter 0.4s ease;
+}
+.page-contact .contact-content h2 { font-size: 3.6rem; }
+.page-contact .contact-content p { font-size: 1rem; color: #4a4a4a; margin-top: 10px; }
+.page-contact .contact-btns {
+  position: absolute; top: calc(50% + 130px); left: 50%;
+  transform: translate(-50%, -50%) scale(1.1);
+  z-index: 3; display: flex; gap: 56px;
+}
+.page-contact:has(.contact-btns:hover) .contact-content { filter: blur(4px); }
+.page-contact:has(.contact-btns:hover) .contact-btns .contact-btn:not(:hover) { filter: blur(4px); transition: filter 0.4s ease; }
+.contact-btn {
+  padding: 0.15rem 2rem; font-size: 0.85rem; font-family: inherit;
+  background: rgba(255,255,255,0.15); color: #1d1d1f; border: 1px solid #1d1d1f;
+  border-radius: 4px; cursor: pointer; transition: all 0.2s, filter 0.4s ease;
+  white-space: nowrap;
+}
+.contact-btn:hover { background: rgba(255,255,255,0.3); }
+.contact-btn:active { transform: scale(0.96); background: rgba(29,29,31,0.9); color: #fff; }
+.copyright-bar {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 1.2rem; background: #000; color: #fff;
+  font-family: 'Noto Serif SC', serif; font-size: 0.8rem; font-weight: 200;
+  text-align: center; letter-spacing: 0.05em; z-index: 3;
+}
+
+/* GALLERY FACES PAGE */
+.page-faces {
+  position: relative; min-height: 100vh; overflow: hidden;
+}
+.photo-frame {
+  position: absolute; background: #fff; padding: 8px;
+  box-shadow: 0 15px 30px 4px rgba(0,0,0,0.45);
+  opacity: 0;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.photo-frame img {
+  width: 100%; height: 100%; object-fit: contain; display: block;
+}
+.page-faces.in-view .photo-frame {
+  animation: slideIn 0.5s cubic-bezier(0.05, 0.9, 0.1, 1) forwards;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.page-faces.in-view .photo-frame:nth-child(1) { --rot: -5deg; animation-delay: 0.1s; }
+.page-faces.in-view .photo-frame:nth-child(2) { --rot: 3deg; animation-delay: 0.1s; }
+.page-faces.in-view .photo-frame:nth-child(3) { --rot: -2deg; animation-delay: 0.25s; }
+.page-faces.in-view .photo-frame:nth-child(4) { --rot: 4deg; animation-delay: 0.25s; }
+.page-faces.in-view .photo-frame:nth-child(5) { --rot: -3deg; animation-delay: 0.5s; }
+.page-faces.in-view .photo-frame:nth-child(6) { --rot: 2deg; animation-delay: 0.75s; }
+.page-faces.in-view .photo-frame:nth-child(7) { --rot: -4deg; animation-delay: 1.0s; }
+.page-faces.in-view .photo-frame:nth-child(8) { --rot: 3deg; animation-delay: 1.0s; }
+.page-faces.in-view .photo-frame:nth-child(9) { --rot: -2deg; animation-delay: 1.2s; }
+.page-faces.in-view .photo-frame:nth-child(10) { --rot: 4deg; animation-delay: 1.35s; }
+.page-faces.in-view .photo-frame:nth-child(11) { --rot: -3deg; animation-delay: 1.5s; }
+.page-faces.in-view .photo-frame:nth-child(12) { --rot: 2deg; animation-delay: 1.5s; }
+.page-faces.in-view .photo-frame:nth-child(13) { --rot: -4deg; animation-delay: 1.5s; }
+.page-faces.in-view .photo-frame:nth-child(14) { --rot: 3deg; animation-delay: 1.65s; }
+.page-faces.in-view .photo-frame:nth-child(15) { --rot: -2deg; animation-delay: 1.65s; }
+.page-faces:not(.in-view) .photo-frame {
+  animation: slideOut 0.4s ease-in forwards;
+}
+.page-faces:not(.in-view) .side-photo.top, .page-faces:not(.in-view) .side-photo.bottom {
+  animation: fadeOut 0.4s ease-in forwards;
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.3); }
+}
+
+@keyframes gentleFloat {
+  0%, 100% { transform: translateY(-8px); }
+  50% { transform: translateY(-14px); }
+}
+@keyframes fadeOut { 0% { opacity: 1; } 100% { opacity: 0; } }
+
+.page-faces.in-view .side-photo.top, .page-faces.in-view .side-photo.bottom {
+  opacity: 0; animation: fadeIn 2s ease-out forwards;
+}
+.page-faces.in-view .side-photo.top { animation-delay: 2s; }
+.page-faces.in-view .side-photo.bottom { animation-delay: 3s; }
+
+.page-faces .center-box::before, .page-faces .center-box::after {
+  content: ""; position: absolute; top: 0; width: 250px; height: 100%;
+}
+.page-faces .center-box::before { left: -250px; background: linear-gradient(to left, rgba(0,0,0,0.7), transparent); }
+.page-faces .center-box::after { right: -250px; background: linear-gradient(to right, rgba(0,0,0,0.7), transparent); }
+.page-faces .center-box {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 40%; padding: 0.75rem 2rem; background: rgba(0,0,0,0.7);
+  z-index: 18; text-align: center;
+}
+.page-faces .center-box h2 { color: #fff; font-size: 2.2rem; }
+.page-faces .center-box p { color: rgba(255,255,255,0.9); font-size: 1rem; }
+.page-faces .side-photo {
+  opacity: 0;
+  position: absolute; left: 50%; transform: translateX(-50%);
+  width: 30vw; z-index: 25; background: #fff; padding: 8px; box-shadow: 0 15px 30px 4px rgba(0,0,0,0.45);
+}
+.page-faces .side-photo.top { padding: 3px; clip-path: inset(8px 8px 8px 8px); }
+.page-faces .side-photo.bottom { width: 26vw; }
+.page-faces .side-photo.top { top: -4%; }
+.page-faces .side-photo.bottom { bottom: 4%; }
+.page-faces .side-photo img { width: 100%; height: auto; }
+
+@keyframes slideOut {
+  0% { opacity: 1; transform: translate(0, 0) rotate(var(--rot, 0deg)); }
+  100% { opacity: 0; transform: translate(var(--tx, 0), var(--ty, 0)) rotate(var(--rot, 0deg)); }
+}
+@keyframes fadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes slideIn {
+  0% { opacity: 0; transform: translate(var(--tx, 0), var(--ty, 0)) rotate(var(--rot, 0deg)); }
+  100% { opacity: 1; transform: translate(0, 0) rotate(var(--rot, 0deg)); }
+}
+
+/* COPY TOAST */
+.copy-toast {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(2);
+  color: #fff; padding: 1rem 2rem;
+  font-size: 1.8rem; z-index: 1000; letter-spacing: 0.12em;
+  opacity: 0; pointer-events: none;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+.copy-toast.show { opacity: 1; animation: toastFade 4s ease forwards; }
+@keyframes toastFade { 0% { opacity: 0; transform: translate(-50%, -50%) scale(1.2); } 30% { opacity: 1; transform: translate(-50%, -50%) scale(2); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(2); } }
+
+/* CUSTOM CURSOR */
+html, body { cursor: none; }
+.custom-cursor {
+  position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999;
+  width: 32px; height: 28px;
+  background: url('photos/heart.png') no-repeat center center;
+  background-size: contain;
+  image-rendering: pixelated;
+  transform: translate(-50%, -50%); transition: opacity 0.3s;
+  opacity: 0;
+    /* outline */
+    -4px -16px 0 #000, 0px -16px 0 #000, 8px -16px 0 #000, 12px -16px 0 #000,
+    -8px -12px 0 #000, 16px -12px 0 #000, 20px -12px 0 #000,
+    -12px -8px 0 #000, 20px -8px 0 #000,
+    -12px -4px 0 #000, 20px -4px 0 #000,
+    -12px 0px 0 #000, 20px 0px 0 #000,
+    -12px 4px 0 #000, 20px 4px 0 #000,
+    -8px 8px 0 #000, 16px 8px 0 #000,
+    -4px 12px 0 #000, 12px 12px 0 #000,
+    0px 16px 0 #000, 8px 16px 0 #000,
+    4px 20px 0 #000,
+    /* red fill */
+    -4px -12px 0 #e60000, 0px -12px 0 #e60000, 4px -12px 0 #e60000, 8px -12px 0 #e60000, 12px -12px 0 #e60000,
+    -8px -8px 0 #e60000, -4px -8px 0 #e60000, 0px -8px 0 #e60000, 4px -8px 0 #e60000, 8px -8px 0 #e60000, 12px -8px 0 #e60000, 16px -8px 0 #e60000,
+    -8px -4px 0 #e60000, -4px -4px 0 #e60000, 0px -4px 0 #e60000, 4px -4px 0 #e60000, 8px -4px 0 #e60000, 12px -4px 0 #e60000, 16px -4px 0 #e60000,
+    -8px 0px 0 #e60000, -4px 0px 0 #e60000, 0px 0px 0 #e60000, 4px 0px 0 #e60000, 8px 0px 0 #e60000, 12px 0px 0 #e60000, 16px 0px 0 #e60000,
+    -8px 4px 0 #e60000, -4px 4px 0 #e60000, 0px 4px 0 #e60000, 4px 4px 0 #e60000, 8px 4px 0 #e60000, 12px 4px 0 #e60000, 16px 4px 0 #e60000,
+    -4px 8px 0 #e60000, 0px 8px 0 #e60000, 4px 8px 0 #e60000, 8px 8px 0 #e60000, 12px 8px 0 #e60000,
+    0px 12px 0 #e60000, 4px 12px 0 #e60000, 8px 12px 0 #e60000,
+    4px 16px 0 #e60000;
+}
+body:hover .custom-cursor { opacity: 1; }
+
+body.page-faces-ready.side-hover .custom-cursor {
+  animation: heartbeat 0.44s steps(1) infinite !important;
+}
+
+.page-faces .photo-frame,
+.page-faces .center-box {
+  transition: filter 0.4s ease;
+}
+body.page-faces-ready .page-faces .side-photo {
+  transition: transform 0.4s ease, z-index 0s;
+}
+body.page-faces-ready .page-faces .side-photo:hover {
+  transform: translateX(-50%) scale(1.15);
+  z-index: 100;
+}
+body.page-faces-ready .page-faces:has(.side-photo:hover) .photo-frame,
+body.page-faces-ready .page-faces:has(.side-photo:hover) .center-box {
+  filter: blur(4px) brightness(0.6);
+  transition: filter 0.4s ease;
+}
+body.page-faces-ready .page-faces:has(.side-photo:hover) .side-photo:not(:hover) {
+  filter: blur(4px) brightness(0.6);
+  transition: filter 0.4s ease;
+}
+
+body.page-faces-ready .page-faces .photo-frame {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+body.page-faces-ready .page-faces .photo-frame.hovered {
+  transform: translateY(-10px) !important;
+  box-shadow: 0 15px 40px 6px rgba(0,0,0,0.4) !important;
+  z-index: 50;
+}
+
+.page-photo {
+  position: absolute; top: calc(50% + 600px); right: 0; transform: translateY(-50%);
+  width: 800px; object-fit: contain;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+</style>
+</head>
+<body>
+<div class="custom-cursor" id="customCursor"></div>
+<div class="dawn"></div>
+
+<div class="nav-wrapper" id="navWrapper">
+  <div class="nav-dial" id="navDial">
+    <span class="nav-mark">Home</span>
+    <span class="nav-mark">我</span>
+    <span class="nav-mark">Gallery</span>
+    <span class="nav-mark">爱并感激</span>
+    <span class="nav-mark">交朋友</span>
+  </div>
+</div>
+
+<div class="hero">
+  <img class="hero-img" src="hero_grain.jpg" alt="">
+  <div class="hero-content">
+    <h1>Hi，我是周烨琛</h1>
+    <p class="sub">或者，我更喜欢别人叫我周灿烂</p>
+  </div>
+</div>
+
+<div class="page"><div class="page-inner"><h2>我</h2><p>中国传媒大学在读。关注光的消逝、空间的沉默、人与环境的边界。</p></div><img class="page-photo" src="photos/微信图片_20260616220252_231_103.jpg" alt=""></div>
+<div class="page"><div class="page-inner"><h2>Gallery — 消逝</h2><p>关于时间的不可逆性。</p></div></div>
+<div class="page"><div class="page-inner"><h2>Gallery — 面孔</h2><p>人与镜头之间的距离，就是信任的距离。</p></div></div>
+<div class="page page-faces" data-page="4" id="pageFaces">
+  <a href="lover.html" class="side-photo top"><img src="photos/微信图片_20260616192315_224_103.jpg" alt=""></a>
+  <a href="parents.html" class="side-photo bottom"><img src="photos/微信图片_20260616192654_230_103.jpg" alt=""></a>
+  <div class="center-box">
+    <h2>爱并感激</h2>
+    <p>我爱这个世界，这里有很多爱我和支持我的人，我感激我遇到的每一次阴晴，感恩相逢相识的所有人。</p>
+  </div>
+  <div class="photo-frame" style="width:20vw;top:4%;left:2%;--tx:-120vw;--ty:0;--rot:-5deg;z-index:1;"><img src="photos/微信图片_20260616162634_197_103.jpg" alt=""></div>
+  <div class="photo-frame" style="width:17vw;top:6%;left:22%;--tx:120vw;--ty:0;--rot:4deg;z-index:2;"><img src="photos/微信图片_20260616162635_198_103.jpg" alt=""></div>
+  <div class="photo-frame" style="width:17vw;top:2%;right:22%;--tx:0;--ty:-120vh;--rot:-3deg;z-index:3;"><img src="photos/微信图片_20260616162638_200_103.jpg" alt=""></div>
+  <div class="photo-frame" style="width:18vw;top:5%;right:2%;--tx:120vw;--ty:50vh;--rot:3deg;z-index:4;"><img src="photos/微信图片_20260616162644_202_103.jpg" alt=""></div>
+  <div class="photo-frame" style="width:20vw;top:30%;left:2%;--tx:0;--ty:120vh;--rot:-4deg;z-index:5;"><img src="photos/微信图片_20260616162646_203_103.jpg" alt=""></div>
+  <div class="photo-frame" style="width:17vw;top:35%;left:20%;--tx:-120vw;--ty:50vh;--rot:3deg;z-index:6;"><img src="photos/微信图片_20260616162648_204_103.jpg" alt=""></div>
+  <div class="photo-frame" style="width:17vw;top:28%;right:20%;--tx:120vw;--ty:0;--rot:-5deg;z-index:7;"><img src="photos/微信图片_20260616162721_214_103.jpg" alt=""></div>
+  <div class="photo-frame" style="width:17vw;top:38%;right:2%;--tx:0;--ty:-120vh;--rot:4deg;z-index:8;"><img src="photos/微信图片_20260616162725_215_103.jpg" alt=""></div>
+  <div class="photo-frame" style="width:18vw;top:56%;left:2%;--tx:-120vw;--ty:0;--rot:-3deg;z-index:9;"><img src="photos/微信图片_20260616162728_216_103.jpg" alt=""></div>
+  <div class="photo-frame" style="width:234px;top:72%;left:13%;--tx:0;--ty:120vh;--rot:5deg;z-index:10;"><img src="photos/微信图片_20260616162730_217_103.jpg" alt=""></div>
+  <div class="photo-frame" style="width:18vw;top:58%;right:22%;--tx:120vw;--ty:50vh;--rot:-4deg;z-index:11;"><img src="photos/微信图片_20260616163027_218_103.jpg" alt=""></div>
+  <div class="photo-frame" style="width:18vw;top:65%;right:2%;--tx:0;--ty:-120vh;--rot:3deg;z-index:12;"><img src="photos/微信图片_20260616163031_219_103.jpg" alt=""></div>
+  <div class="photo-frame" style="width:14vw;top:15%;right:2%;--tx:120vw;--ty:0;--rot:-4deg;z-index:13;"><img src="photos/微信图片_20260616162637_199_103.jpg" alt=""></div>
+  <div class="photo-frame" style="width:14vw;top:68%;right:15%;--tx:120vw;--ty:0;--rot:-3deg;z-index:14;"><img src="photos/微信图片_20260616162649_205_103.jpg" alt=""></div>
+</div>
+
+<div class="page page-contact" data-page="5">
+  <div class="contact-content">
+    <h2>很高兴认识你，祝你天天开心</h2>
+    <p>我喜欢与人交流，不论你是否喜欢，我都愿意认识你，期待我们相聚。</p>
+  </div>
+  <div class="contact-btns">
+    <button class="contact-btn" onclick="copyText('2322510842@qq.com')">获取邮箱</button>
+    <button class="contact-btn" onclick="copyText('zyc18754270966')">获取微信</button>
+    <button class="contact-btn" onclick="copyText('https://xhslink.com/m/6z93Uw3FBGp')">小红书</button>
+  </div>
+  <div class="copy-toast" id="copyToast">复制成功，我们别处见。</div>
+  <div class="copyright-bar">© 2026 周烨琛  All Rights Reserved</div>
+</div>
+
+<script>
+function copyText(text) {
+  var toast = document.getElementById('copyToast');
+  toast.classList.remove('show');
+  void toast.offsetHeight;
+  toast.classList.add('show');
+  setTimeout(function() { toast.classList.remove('show'); }, 4000);
+  navigator.clipboard.writeText(text).catch(function() {});
+}
+
+var dial = document.getElementById('navDial');
+var marks = dial.querySelectorAll('.nav-mark');
+var navWrapper = document.getElementById('navWrapper');
+var vh = window.innerHeight;
+
+var pageFaces = document.getElementById('pageFaces');
+var facesObserver = new IntersectionObserver(function(entries) {
+  entries.forEach(function(entry) {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('in-view');
+    } else {
+      entry.target.classList.remove('in-view');
+    }
+  });
+}, { threshold: 0.2 });
+if (pageFaces) facesObserver.observe(pageFaces);
+
+// Mark page as ready after main photos appear
+setTimeout(function() {
+  document.body.classList.add('page-faces-ready');
+}, 4500);
+
+var cursor = document.getElementById('customCursor');
+document.addEventListener('mousemove', function(e) {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top = e.clientY + 'px';
+});
+navWrapper.addEventListener('mouseenter', function() { document.body.classList.add('dial-hover'); });
+navWrapper.addEventListener('mouseleave', function() { document.body.classList.remove('dial-hover'); });
+document.querySelectorAll('.side-photo').forEach(function(photo) {
+  photo.addEventListener('mouseenter', function() { document.body.classList.add('side-hover'); });
+  photo.addEventListener('mouseleave', function() { document.body.classList.remove('side-hover'); });
+});
+
+function updateNav() {
+  var y = window.scrollY;
+  var scrollMax = vh * 5;
+  var progress = Math.min(y / scrollMax, 1);
+  var angle = -progress * 240;
+  dial.style.transform = 'rotate(' + angle + 'deg)';
+  
+  var currentPage = Math.min(Math.round(y / vh), 5);
+  navWrapper.classList.toggle('visible', currentPage > 0);
+  if (currentPage === 0) return;
+  var navIndex = currentPage === 1 ? 1 : (currentPage <= 3 ? 2 : (currentPage <= 4 ? 3 : 4));
+  marks.forEach(function(m, i) { m.classList.toggle('active', i === navIndex); });
+}
+window.addEventListener('scroll', updateNav);
+updateNav();
+
+var isDragging = false, lastAngle = 0, accumulatedAngle = 0, scrollStartY = 0;
+function getAngle(cx, cy, ex, ey) { return Math.atan2(ey - cy, ex - cx) * (180 / Math.PI); }
+navWrapper.addEventListener('mousedown', function(e) {
+  isDragging = true; scrollStartY = window.scrollY;
+  var r = dial.getBoundingClientRect();
+  lastAngle = getAngle(r.left + r.width/2, r.top + r.height/2, e.clientX, e.clientY);
+  accumulatedAngle = 0; e.preventDefault();
+});
+window.addEventListener('mousemove', function(e) {
+  if (!isDragging) return;
+  var r = dial.getBoundingClientRect();
+  var currentAngle = getAngle(r.left + r.width/2, r.top + r.height/2, e.clientX, e.clientY);
+  var delta = currentAngle - lastAngle;
+  if (delta > 180) delta -= 360;
+  if (delta < -180) delta += 360;
+  accumulatedAngle += delta; lastAngle = currentAngle;
+  var scrollMax = vh * 5;
+  window.scrollTo(0, Math.max(0, Math.min(scrollMax, scrollStartY - (accumulatedAngle / 24) * scrollMax)));
+});
+window.addEventListener('mouseup', function() { isDragging = false; });
+
+// Photo hover effect
+document.querySelectorAll('.page-faces .photo-frame').forEach(function(frame) {
+  frame.addEventListener('mouseenter', function() { this.classList.add('hovered'); });
+  frame.addEventListener('mouseleave', function() { this.classList.remove('hovered'); });
+});
+</script>
+</body>
+</html>
